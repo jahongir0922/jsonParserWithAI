@@ -1,0 +1,17 @@
+{
+  "permissions": {
+    "allow": [
+      "WebFetch(domain:claude.ai)",
+      "Bash(pip install:*)",
+      "Bash(python:*)",
+      "Bash(ollama list:*)",
+      "Bash(ollama pull:*)",
+      "Bash(uvicorn api:app --host 0.0.0.0 --port 8000)",
+      "Bash(curl -s http://localhost:8000/)",
+      "Bash(curl:*)",
+      "Bash(netstat -ano)",
+      "Bash(taskkill /PID 8916 /F)",
+      "Bash(taskkill /PID 14348 /F)"
+    ]
+  }
+}
