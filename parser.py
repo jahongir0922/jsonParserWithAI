@@ -49,6 +49,8 @@ _PRIORITY: dict[str, str] = {
 
 def get_country(address: str) -> str | None:
     """Manzildan davlat kodini topadi."""
+    if not address:
+        return None
     from difflib import get_close_matches
     for word in re.split(r"[\s,\-]+", address.lower()):
         if not word:
@@ -166,15 +168,25 @@ FEW_SHOT = [
         "role": "assistant",
         "content": '[{"direction": "Shaharlararo", "fromAddress": "Almaty", "toAddress": "Tashkent", "truckType": ["Tent"], "loadName": "Oborudovanie", "weight": 15, "volume": null, "paymentType": "Naqd", "deliveryCost": 500, "currency": "USD", "advance": null, "loadingTime": null, "isAdditional": false, "descriptions": "2 avto", "phone": "+77001234567", "clientName": null}]',
     },
+    {
+        "role": "user",
+        "content": "НАВОИ-БАКУ\nтент/реф/паровоз\nарпа 18 тонн\nналом\n+998901234567",
+    },
+    {
+        "role": "assistant",
+        "content": '[{"direction": "Xalqaro", "fromAddress": "Navoi", "toAddress": "Baku", "truckType": ["Tent", "Ref", "Paravoz"], "loadName": "Arpa", "weight": 18, "volume": null, "paymentType": "Naqd", "deliveryCost": null, "currency": null, "advance": null, "loadingTime": null, "isAdditional": false, "descriptions": null, "phone": "+998901234567", "clientName": null}]',
+    },
 ]
 
 
 def _split_messages(matn: str) -> list[str]:
     """Xabarni emoji separatorlar va bo'sh qatorlar bo'yicha bo'laklarga ajratadi."""
-    # Emoji ketma-ketliklarini separator sifatida ishlatamiz
-    cleaned = re.sub(r'[\U0001F300-\U0001FFFF\U00002600-\U000027FF]+', '\n---SEP---\n', matn)
-    # 2+ bo'sh qatorni ham separator deb olamiz
-    cleaned = re.sub(r'\n{3,}', '\n---SEP---\n', cleaned)
+    # Bayroq emojilari (🇺🇿, 🇷🇺) shahar nomi oldida turadi — ularni olib tashlaymiz
+    cleaned = re.sub(r'[\U0001F1E0-\U0001F1FF]+', '', matn)
+    # Katta emoji ketma-ketliklarini separator sifatida ishlatamiz
+    cleaned = re.sub(r'[\U0001F300-\U0001FFFF\U00002600-\U000027FF]+', '\n---SEP---\n', cleaned)
+    # 1+ bo'sh qatorni (2+ newline) separator deb olamiz
+    cleaned = re.sub(r'\n{2,}', '\n---SEP---\n', cleaned)
     blocks = re.split(r'\n---SEP---\n', cleaned)
     # Bo'sh va juda qisqa bloklarni olib tashlaymiz
     result = []
