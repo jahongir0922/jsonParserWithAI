@@ -7,10 +7,11 @@ from openai import OpenAI
 
 client = OpenAI(base_url="http://localhost:11434/v1", api_key="ollama")
 
-# golocations/cities.json dan shahar → davlat kodi xaritasi
+# golocations ma'lumotlaridan shahar → davlat kodi xaritasi
 import pathlib
 _base = pathlib.Path(__file__).parent
 
+# cities.json: inglizcha nom → country_code
 _geo_data = json.loads((_base / "golocations" / "cities.json").read_text(encoding="utf-8"))
 _geo_cities = next(item["data"] for item in _geo_data if item.get("type") == "table")
 _CITY_COUNTRY: dict[str, str] = {
@@ -18,15 +19,32 @@ _CITY_COUNTRY: dict[str, str] = {
     for city in _geo_cities
 }
 
-# cities.json — transliteratsiya aliases
-_aliases_raw = json.loads((_base / "cities.json").read_text(encoding="utf-8"))
-_ALIASES: dict[str, str] = {k: v for group in _aliases_raw.values() for k, v in group.items()}
-_ALIAS_COUNTRY: dict[str, str] = {
-    k.lower(): iso.upper()
-    for iso, group in _aliases_raw.items()
-    for k in group
-}
+# cities_translations.json: rus/o'zbek nomlar → country_code
+_trans_data = json.loads((_base / "golocations" / "cities_translations.json").read_text(encoding="utf-8"))
+_trans_cities = next(item["data"] for item in _trans_data if item.get("type") == "table")
+
+# id → country_code xaritasi
+_id_country: dict[str, str] = {city["id"]: city["country_code"] for city in _geo_cities}
+
+for t in _trans_cities:
+    country = _id_country.get(t["id"])
+    if not country:
+        continue
+    for field in ("name_ru", "name_oz", "name_uz"):
+        val = t.get(field, "").strip().lower()
+        if val and val not in _CITY_COUNTRY:
+            _CITY_COUNTRY[val] = country
+
 _CITY_NAMES = list(_CITY_COUNTRY.keys())
+
+# Noaniq nomlar uchun ustunlik ro'yxati
+_ambiguous_raw = json.loads((_base / "cities.json").read_text(encoding="utf-8"))
+_PRIORITY: dict[str, str] = {
+    name.lower(): country
+    for country, names in _ambiguous_raw.items()
+    if not country.startswith("_")
+    for name in names
+}
 
 
 def get_country(address: str) -> str | None:
@@ -35,15 +53,14 @@ def get_country(address: str) -> str | None:
     for word in re.split(r"[\s,\-]+", address.lower()):
         if not word:
             continue
-        # 1. cities.json dan to'g'ridan-to'g'ri davlat kodi
-        if word in _ALIAS_COUNTRY:
-            return _ALIAS_COUNTRY[word]
-        # 2. Alias orqali geonamescache ga
-        normalized = _ALIASES.get(word, word)
-        if normalized in _CITY_COUNTRY:
-            return _CITY_COUNTRY[normalized]
-        # 3. Fuzzy moslik
-        matches = get_close_matches(normalized, _CITY_NAMES, n=1, cutoff=0.82)
+        # 1. Noaniq nomlar ustunligi
+        if word in _PRIORITY:
+            return _PRIORITY[word]
+        # 2. To'g'ridan-to'g'ri moslik (ingliz, rus, o'zbek nomlar)
+        if word in _CITY_COUNTRY:
+            return _CITY_COUNTRY[word]
+        # 2. Fuzzy moslik
+        matches = get_close_matches(word, _CITY_NAMES, n=1, cutoff=0.85)
         if matches:
             return _CITY_COUNTRY[matches[0]]
     return None
