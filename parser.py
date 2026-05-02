@@ -15,28 +15,17 @@ _CITY_COUNTRY: dict[str, str] = {
     for city in _gc.get_cities().values()
 }
 
-# O'zbek/Rus imlosi → geonamescache nomi mapping
-_ALIASES: dict[str, str] = {
-    # O'zbekiston
-    "toshkent": "tashkent", "buxoro": "bukhara", "buxaro": "bukhara",
-    "samarqand": "samarkand", "qoqon": "kokand", "ko'qon": "kokand",
-    "andijon": "andijan", "namangan": "namangan", "farg'ona": "fergana",
-    "fargona": "fergana", "qarshi": "karshi", "navoiy": "navoiy",
-    "urganch": "urgench", "xiva": "khiva", "termiz": "termez",
-    "nukus": "nukus", "jizzax": "jizzakh", "guliston": "guliston",
-    # Qozog'iston
-    "almati": "almaty", "nursulton": "astana", "nur-sultan": "astana",
-    "shymkent": "shymkent", "qaragandy": "karaganda", "alatau": "almaty",
-    "taldiqorgon": "taldykorgan", "taldykurgan": "taldykorgan",
-    # Rossiya
-    "moskva": "moscow", "peterburg": "saint petersburg",
-    "novosibirsk": "novosibirsk", "yekaterinburg": "yekaterinburg",
-    # Qirg'iziston
-    "bishkek": "bishkek", "osh": "osh",
-    # Tojikiston
-    "dushanbe": "dushanbe",
-    # Turkmaniston
-    "ashgabat": "ashgabat",
+# Shahar alias ro'yxatini cities.json dan yuklaymiz
+import pathlib
+_cities_path = pathlib.Path(__file__).parent / "cities.json"
+_raw = json.loads(_cities_path.read_text(encoding="utf-8"))
+_ALIASES: dict[str, str] = {k: v for group in _raw.values() for k, v in group.items()}
+
+# Har bir guruh uchun davlat kodi (cities.json key = ISO kod)
+_ALIAS_COUNTRY: dict[str, str] = {
+    k.lower(): iso.upper()
+    for iso, group in _raw.items()
+    for k in group
 }
 _CITY_NAMES = list(_CITY_COUNTRY.keys())
 
@@ -47,9 +36,11 @@ def get_country(address: str) -> str | None:
     for word in re.split(r"[\s,\-]+", address.lower()):
         if not word:
             continue
-        # 1. Alias mapping
+        # 1. cities.json dan to'g'ridan-to'g'ri davlat kodi
+        if word in _ALIAS_COUNTRY:
+            return _ALIAS_COUNTRY[word]
+        # 2. Alias orqali geonamescache ga
         normalized = _ALIASES.get(word, word)
-        # 2. Aniq moslik
         if normalized in _CITY_COUNTRY:
             return _CITY_COUNTRY[normalized]
         # 3. Fuzzy moslik
