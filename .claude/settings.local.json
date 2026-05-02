@@ -11,7 +11,8 @@
       "Bash(curl:*)",
       "Bash(netstat -ano)",
       "Bash(taskkill /PID 8916 /F)",
-      "Bash(taskkill /PID 14348 /F)"
+      "Bash(taskkill /PID 14348 /F)",
+      "Bash(ollama ps:*)"
     ]
   }
 }
