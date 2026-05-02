@@ -14,7 +14,8 @@
       "Bash(taskkill /PID 14348 /F)",
       "Bash(ollama ps:*)",
       "Bash(pip show:*)",
-      "Bash(pip search:*)"
+      "Bash(pip search:*)",
+      "Bash(pip freeze:*)"
     ]
   }
 }
