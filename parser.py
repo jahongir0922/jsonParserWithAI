@@ -4,27 +4,26 @@ import re
 sys.stdout.reconfigure(encoding="utf-8")
 
 from openai import OpenAI
-import geonamescache
 
 client = OpenAI(base_url="http://localhost:11434/v1", api_key="ollama")
 
-# Shahar → davlat kodi xaritasi
-_gc = geonamescache.GeonamesCache()
+# golocations/cities.json dan shahar → davlat kodi xaritasi
+import pathlib
+_base = pathlib.Path(__file__).parent
+
+_geo_data = json.loads((_base / "golocations" / "cities.json").read_text(encoding="utf-8"))
+_geo_cities = next(item["data"] for item in _geo_data if item.get("type") == "table")
 _CITY_COUNTRY: dict[str, str] = {
-    city["name"].lower(): city["countrycode"]
-    for city in _gc.get_cities().values()
+    city["name"].lower(): city["country_code"]
+    for city in _geo_cities
 }
 
-# Shahar alias ro'yxatini cities.json dan yuklaymiz
-import pathlib
-_cities_path = pathlib.Path(__file__).parent / "cities.json"
-_raw = json.loads(_cities_path.read_text(encoding="utf-8"))
-_ALIASES: dict[str, str] = {k: v for group in _raw.values() for k, v in group.items()}
-
-# Har bir guruh uchun davlat kodi (cities.json key = ISO kod)
+# cities.json — transliteratsiya aliases
+_aliases_raw = json.loads((_base / "cities.json").read_text(encoding="utf-8"))
+_ALIASES: dict[str, str] = {k: v for group in _aliases_raw.values() for k, v in group.items()}
 _ALIAS_COUNTRY: dict[str, str] = {
     k.lower(): iso.upper()
-    for iso, group in _raw.items()
+    for iso, group in _aliases_raw.items()
     for k in group
 }
 _CITY_NAMES = list(_CITY_COUNTRY.keys())

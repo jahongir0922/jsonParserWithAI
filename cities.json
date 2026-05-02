@@ -28,6 +28,8 @@
     "qashqadaryo": "kashkadarya"
   },
   "kz": {
+    "astana": "astana",
+    "nursulton": "astana",
     "almati": "almaty",
     "almatы": "almaty",
     "alma-ata": "almaty",
@@ -60,6 +62,7 @@
     "bişkek": "bishkek"
   },
   "tj": {
+    "dushanbe": "dushanbe",
     "xujand": "khujand",
     "kulob": "kulob",
     "qurghonteppa": "bokhtar"

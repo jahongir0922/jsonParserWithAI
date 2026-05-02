@@ -12,7 +12,9 @@
       "Bash(netstat -ano)",
       "Bash(taskkill /PID 8916 /F)",
       "Bash(taskkill /PID 14348 /F)",
-      "Bash(ollama ps:*)"
+      "Bash(ollama ps:*)",
+      "Bash(pip show:*)",
+      "Bash(pip search:*)"
     ]
   }
 }
