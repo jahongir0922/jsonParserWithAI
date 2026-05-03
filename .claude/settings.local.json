@@ -21,7 +21,8 @@
       "Bash(taskkill /F /PID 1328)",
       "Bash(taskkill //F //PID 1328)",
       "Bash(taskkill //F //PID 14464)",
-      "Bash(xargs taskkill:*)"
+      "Bash(xargs taskkill:*)",
+      "Bash(ollama:*)"
     ]
   }
 }

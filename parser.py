@@ -179,28 +179,10 @@ FEW_SHOT = [
 ]
 
 
-def _split_messages(matn: str) -> list[str]:
-    """Xabarni emoji separatorlar va bo'sh qatorlar bo'yicha bo'laklarga ajratadi."""
-    # Bayroq emojilari (🇺🇿, 🇷🇺) shahar nomi oldida turadi — ularni olib tashlaymiz
-    cleaned = re.sub(r'[\U0001F1E0-\U0001F1FF]+', '', matn)
-    # Katta emoji ketma-ketliklarini separator sifatida ishlatamiz
-    cleaned = re.sub(r'[\U0001F300-\U0001FFFF\U00002600-\U000027FF]+', '\n---SEP---\n', cleaned)
-    # 1+ bo'sh qatorni (2+ newline) separator deb olamiz
-    cleaned = re.sub(r'\n{2,}', '\n---SEP---\n', cleaned)
-    blocks = re.split(r'\n---SEP---\n', cleaned)
-    # Bo'sh va juda qisqa bloklarni olib tashlaymiz
-    result = []
-    for block in blocks:
-        block = block.strip()
-        if len(block) > 15:
-            result.append(block)
-    return result
-
-
 def _parse_single(matn: str) -> list[dict]:
     """Bitta xabar blokini parse qiladi."""
     response = client.chat.completions.create(
-        model="llama3.2",
+        model="qwen2.5:14b",
         messages=[
             {"role": "system", "content": SYSTEM_PROMPT},
             *FEW_SHOT,
@@ -230,18 +212,4 @@ def _parse_single(matn: str) -> list[dict]:
 
 
 def parse_yuk_xabar(matn: str) -> list[dict]:
-    blocks = _split_messages(matn)
-
-    # Bitta blok bo'lsa to'g'ridan-to'g'ri parse qilamiz
-    if len(blocks) <= 1:
-        return _parse_single(matn.strip())
-
-    # Har bir blokni alohida parse qilamiz
-    all_results = []
-    for block in blocks:
-        try:
-            items = _parse_single(block)
-            all_results.extend(items)
-        except Exception:
-            continue
-    return all_results
+    return _parse_single(matn.strip())
